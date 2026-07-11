@@ -14,6 +14,7 @@
   "dependencies": [],
   "minCrmVersion": "1.1.29",
   "entrypoint": "src/main.py",
+  "helpPage": "ui/help.html",
   "scriptType": "daemon",
   "settingsSchema": [
     {
