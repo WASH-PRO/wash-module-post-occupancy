@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Post Occupancy Monitor</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #1e293b; background: #f8fafc; }
+    body { margin: 0; padding: 1rem 1.25rem; }
+    h1 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; }
+    .card b { display: block; font-size: 1.4rem; }
+    label { display: block; margin-bottom: 0.75rem; font-size: 0.875rem; }
+    input { width: 100%; max-width: 12rem; padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; }
+    button { padding: 0.45rem 0.9rem; border-radius: 0.5rem; border: 0; background: #2563eb; color: #fff; cursor: pointer; }
+    pre { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; overflow: auto; font-size: 0.75rem; }
+    .muted { color: #64748b; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <h1 id="title">Монитор занятости постов</h1>
+  <p class="muted" id="updated">—</p>
+  <div class="grid" id="stats"></div>
+  <form id="settings-form">
+    <label>
+      <span id="poll-label">Интервал опроса (сек)</span>
+      <input type="number" name="poll_interval" min="15" max="3600" />
+    </label>
+    <button type="submit" id="save-btn">Сохранить</button>
+  </form>
+  <h2 style="font-size:0.95rem;margin:1rem 0 0.5rem">Последний снимок</h2>
+  <pre id="snapshot">Загрузка…</pre>
+  <script src="wash-module-sdk.js"></script>
+  <script>
+    const MODULE_ID = 'post-occupancy-monitor';
+
+    async function refresh() {
+      const status = await WashModule.api(`/installed/${MODULE_ID}/status`);
+      const snap = status.snapshot;
+      const stats = document.getElementById('stats');
+      if (snap) {
+        document.getElementById('updated').textContent = snap.recordedAt || '—';
+        stats.innerHTML = ['total','busy','free','offline'].map((k) =>
+          `<div class="card"><span>${k}</span><b>${snap[k] ?? 0}</b></div>`
+        ).join('');
+        document.getElementById('snapshot').textContent = JSON.stringify(snap, null, 2);
+      } else {
+        stats.innerHTML = '<div class="card muted">Нет данных — запустите модуль</div>';
+        document.getElementById('snapshot').textContent = '—';
+      }
+      if (status.settings) {
+        document.querySelector('[name=poll_interval]').value = status.settings.poll_interval ?? 60;
+      }
+    }
+
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const poll_interval = Number(new FormData(e.target).get('poll_interval'));
+      await WashModule.api(`/installed/${MODULE_ID}/settings`, {
+        method: 'PUT',
+        body: JSON.stringify({ settings: { poll_interval } }),
+      });
+      document.getElementById('save-btn').textContent = 'Сохранено';
+      setTimeout(() => { document.getElementById('save-btn').textContent = 'Сохранить'; }, 1500);
+    });
+
+    refresh();
+    setInterval(refresh, 10000);
+  </script>
+</body>
+</html>
