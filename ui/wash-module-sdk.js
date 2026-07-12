@@ -9,7 +9,12 @@
   }
 
   function getLocale() {
-    return localStorage.getItem('wash_crm_locale') || 'ru';
+    const stored = localStorage.getItem('wash_locale') || localStorage.getItem('wash_crm_locale');
+    return stored === 'ru' ? 'ru' : 'en';
+  }
+
+  function syncDocumentLocale() {
+    document.documentElement.lang = getLocale();
   }
 
   function t(map) {

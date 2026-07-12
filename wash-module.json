@@ -1,11 +1,14 @@
 {
   "id": "post-occupancy-monitor",
-  "name": { "ru": "Монитор занятости постов", "en": "Post Occupancy Monitor" },
+  "name": {
+    "ru": "Монитор занятости постов",
+    "en": "Post Occupancy Monitor"
+  },
   "description": {
     "ru": "Отслеживает занятость постов через API post-states и сохраняет снимки.",
     "en": "Tracks post occupancy via post-states API and stores snapshots."
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "WASH-PRO",
   "license": "MIT",
   "category": "monitoring",
@@ -20,7 +23,10 @@
     {
       "key": "poll_interval",
       "type": "number",
-      "label": { "ru": "Интервал опроса (сек)", "en": "Poll interval (sec)" },
+      "label": {
+        "ru": "Интервал опроса (сек)",
+        "en": "Poll interval (sec)"
+      },
       "default": 60,
       "min": 15,
       "max": 3600
