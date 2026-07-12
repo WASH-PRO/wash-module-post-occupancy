@@ -231,11 +231,16 @@
       '<div class="wm-panels">' +
       '<div class="wm-tab-panel is-active" data-panel="overview"><div id="wm-overview"></div></div>' +
       '<div class="wm-tab-panel" data-panel="settings">' +
-      `<h2 class="wm-section-title">${escapeHtml(t({ ru: 'Параметры', en: 'Parameters' }))}</h2>` +
-      `<form id="wm-settings-form">${cfg.settingsHtml || ''}` +
-      '<div class="wm-actions">' +
+      '<div class="wm-settings-panel">' +
+      '<div class="wm-settings-head">' +
+      `<h2 class="wm-settings-title">${escapeHtml(t({ ru: 'Параметры', en: 'Parameters' }))}</h2>` +
+      `<p class="wm-settings-desc">${escapeHtml(t({ ru: 'Сохраните изменения — они применятся в PyOrchestrator. Секретные поля можно оставить пустыми.', en: 'Save to apply in PyOrchestrator. Leave secret fields empty to keep current values.' }))}</p>` +
+      '</div>' +
+      `<form id="wm-settings-form" class="wm-form-grid">${cfg.settingsHtml || ''}` +
+      '<div class="wm-form-actions">' +
       `<button type="submit" class="wm-btn wm-btn-primary" id="wm-save-btn">${escapeHtml(t({ ru: 'Сохранить', en: 'Save' }))}</button>` +
-      '</div></form></div>' +
+      `<span class="wm-field-hint" style="margin:0">${escapeHtml(t({ ru: 'После сохранения перезапустите модуль, если он уже запущен.', en: 'Restart the module after saving if it is already running.' }))}</span>` +
+      '</div></form></div></div>' +
       '<div class="wm-tab-panel" data-panel="logs">' +
       '<div class="wm-logs-toolbar"><span id="wm-logs-meta">—</span>' +
       `<button type="button" class="wm-btn wm-btn-ghost" id="wm-logs-refresh">${escapeHtml(t({ ru: 'Обновить', en: 'Refresh' }))}</button></div>` +

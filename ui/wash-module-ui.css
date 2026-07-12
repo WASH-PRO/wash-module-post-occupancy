@@ -249,6 +249,92 @@ html.wm-dark .wm-tab.is-active {
 
 .wm-tab-panel.is-active { display: block; }
 
+.wm-settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.wm-settings-head {
+  padding-bottom: 0.15rem;
+}
+
+.wm-settings-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--wm-ink);
+}
+
+.wm-settings-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--wm-muted);
+}
+
+.wm-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.wm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--wm-border);
+  border-radius: calc(var(--wm-radius) - 4px);
+  background: var(--wm-canvas);
+  min-height: 100%;
+}
+
+.wm-field--full {
+  grid-column: 1 / -1;
+}
+
+.wm-field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--wm-ink);
+}
+
+.wm-field-hint {
+  font-size: 0.6875rem;
+  color: var(--wm-muted);
+  line-height: 1.45;
+  margin-top: auto;
+  padding-top: 0.15rem;
+}
+
+.wm-form-grid .wm-input,
+.wm-form-grid .wm-select,
+.wm-form-grid .wm-textarea {
+  width: 100%;
+  max-width: none;
+}
+
+.wm-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0.9rem;
+  margin-top: 0.15rem;
+  border: 1px solid var(--wm-border);
+  border-radius: calc(var(--wm-radius) - 4px);
+  background: color-mix(in srgb, var(--wm-surface) 88%, var(--wm-canvas));
+}
+
+.wm-form-actions .wm-btn-primary {
+  min-width: 7.5rem;
+}
+
 .wm-section-title {
   margin: 0 0 0.65rem;
   font-size: 0.8125rem;
@@ -257,29 +343,15 @@ html.wm-dark .wm-tab.is-active {
 }
 
 .wm-grid-2 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 0.65rem 0.85rem;
+  display: contents;
 }
 
-.wm-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+.wm-field-standalone {
   margin-bottom: 0.75rem;
 }
 
-.wm-field-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--wm-muted);
-}
-
-.wm-field-hint {
-  font-size: 0.6875rem;
-  color: var(--wm-muted);
-  line-height: 1.4;
+.wm-field-standalone.wm-field {
+  max-width: calc(50% - 0.375rem);
 }
 
 .wm-input,
@@ -325,7 +397,6 @@ html.wm-dark .wm-textarea:focus {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.25rem;
 }
 
 .wm-btn {
@@ -466,6 +537,16 @@ html.wm-dark .wm-textarea:focus {
   color: var(--wm-accent);
   font-size: 0.625rem;
   font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .wm-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wm-field-standalone.wm-field {
+    max-width: none;
+  }
 }
 
 @media (max-width: 640px) {
