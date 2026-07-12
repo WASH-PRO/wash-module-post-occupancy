@@ -126,7 +126,7 @@
     container.scrollTop = container.scrollHeight;
   }
 
-  function bindTabs(root) {
+  function bindTabs(root, onChange) {
     const tabs = root.querySelectorAll('.wm-tab');
     const panels = root.querySelectorAll('.wm-tab-panel');
     tabs.forEach(function (tab) {
@@ -138,9 +138,61 @@
         panels.forEach(function (panel) {
           panel.classList.toggle('is-active', panel.getAttribute('data-panel') === name);
         });
+        if (onChange) onChange();
       });
     });
   }
+
+  function resolveThemeFromStorage() {
+    const stored = localStorage.getItem('wash_theme');
+    if (stored === 'dark') return 'dark';
+    if (stored === 'light') return 'light';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.classList.toggle('wm-dark', theme === 'dark');
+  }
+
+  function isEmbedMode() {
+    return new URLSearchParams(window.location.search).get('embed') === '1';
+  }
+
+  function notifyResize() {
+    if (!isEmbedMode()) return;
+    const height = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight,
+      document.documentElement.offsetHeight
+    );
+    window.parent.postMessage({ type: 'wash-module-resize', height: height }, '*');
+  }
+
+  function initEmbed() {
+    if (!isEmbedMode()) return;
+    document.documentElement.classList.add('wm-embed');
+    applyTheme(resolveThemeFromStorage());
+
+    window.addEventListener('message', function (event) {
+      if (event.data && event.data.type === 'wash-module-theme') {
+        applyTheme(event.data.theme === 'dark' ? 'dark' : 'light');
+        notifyResize();
+      }
+    });
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(function () {
+        notifyResize();
+      });
+      observer.observe(document.body);
+    }
+
+    window.addEventListener('load', notifyResize);
+    setTimeout(notifyResize, 50);
+    setTimeout(notifyResize, 300);
+  }
+
+  initEmbed();
 
   /**
    * @param {object} cfg
@@ -171,21 +223,20 @@
       '<div id="wm-meta-line" class="wm-meta-line">—</div></div></header>' +
       '<div id="wm-alert" class="wm-alert" hidden></div>' +
       '<section id="wm-metrics" class="wm-metrics"></section>' +
-      '<div class="wm-panels">' +
-      '<nav class="wm-tabs">' +
+      '<nav class="wm-tab-bar">' +
       `<button type="button" class="wm-tab is-active" data-tab="overview">${escapeHtml(t({ ru: 'Обзор', en: 'Overview' }))}</button>` +
       `<button type="button" class="wm-tab" data-tab="settings">${escapeHtml(t({ ru: 'Настройки', en: 'Settings' }))}</button>` +
       `<button type="button" class="wm-tab" data-tab="logs">${escapeHtml(t({ ru: 'Логи', en: 'Logs' }))}</button>` +
       '</nav>' +
+      '<div class="wm-panels">' +
       '<div class="wm-tab-panel is-active" data-panel="overview"><div id="wm-overview"></div></div>' +
       '<div class="wm-tab-panel" data-panel="settings">' +
-      `<h2 class="wm-section-title">${escapeHtml(t({ ru: 'Параметры модуля', en: 'Module settings' }))}</h2>` +
+      `<h2 class="wm-section-title">${escapeHtml(t({ ru: 'Параметры', en: 'Parameters' }))}</h2>` +
       `<form id="wm-settings-form">${cfg.settingsHtml || ''}` +
       '<div class="wm-actions">' +
       `<button type="submit" class="wm-btn wm-btn-primary" id="wm-save-btn">${escapeHtml(t({ ru: 'Сохранить', en: 'Save' }))}</button>` +
       '</div></form></div>' +
       '<div class="wm-tab-panel" data-panel="logs">' +
-      `<h2 class="wm-section-title">${escapeHtml(t({ ru: 'Логи PyOrchestrator', en: 'PyOrchestrator logs' }))}</h2>` +
       '<div class="wm-logs-toolbar"><span id="wm-logs-meta">—</span>' +
       `<button type="button" class="wm-btn wm-btn-ghost" id="wm-logs-refresh">${escapeHtml(t({ ru: 'Обновить', en: 'Refresh' }))}</button></div>` +
       '<div id="wm-logs" class="wm-logs"></div></div></div>';
@@ -193,7 +244,7 @@
     app.querySelector('.wm-title').textContent = t(cfg.title);
     app.querySelector('.wm-subtitle').textContent = cfg.subtitle ? t(cfg.subtitle) : '';
 
-    bindTabs(app);
+    bindTabs(app, notifyResize);
 
     const els = {
       statusBadge: app.querySelector('#wm-status-badge'),
@@ -263,6 +314,7 @@
       }
 
       await loadLogs();
+      notifyResize();
     }
 
     if (els.form && cfg.collectSettings) {
@@ -294,7 +346,7 @@
       void loadLogs();
     });
 
-    refresh();
+    refresh().then(notifyResize);
     setInterval(refresh, cfg.refreshInterval || 12000);
   }
 
@@ -307,5 +359,7 @@
     createPage,
     renderMetrics,
     renderLogs,
+    notifyResize,
+    applyTheme,
   };
 })(window);
