@@ -72,10 +72,23 @@
     return { className: 'wm-status--stopped', label: t({ ru: 'Остановлен', en: 'Stopped' }) };
   }
 
-  function renderMetrics(container, metrics) {
+  function isModuleRunning(statusPayload) {
+    if (!statusPayload || !statusPayload.state) return false;
+    if (statusPayload.activeRunStatus === 'running') return true;
+    return statusPayload.state.status === 'running';
+  }
+
+  function renderMetrics(container, metrics, snap, status) {
     if (!container) return;
-    if (!metrics || !metrics.length) {
+    if (!isModuleRunning(status) && (!snap || !snap.recordedAt)) {
       container.innerHTML = `<div class="wm-empty">${escapeHtml(t({ ru: 'Нет метрик — запустите модуль', en: 'No metrics — start the module' }))}</div>`;
+      return;
+    }
+    if (!metrics || !metrics.length) {
+      const msg = isModuleRunning(status)
+        ? t({ ru: 'Ожидание первого цикла…', en: 'Waiting for first poll…' })
+        : t({ ru: 'Нет метрик — запустите модуль', en: 'No metrics — start the module' });
+      container.innerHTML = `<div class="wm-empty">${escapeHtml(msg)}</div>`;
       return;
     }
     container.innerHTML = metrics
@@ -249,7 +262,13 @@
     app.querySelector('.wm-title').textContent = t(cfg.title);
     app.querySelector('.wm-subtitle').textContent = cfg.subtitle ? t(cfg.subtitle) : '';
 
-    bindTabs(app, notifyResize);
+    bindTabs(app, function () {
+      const activeTab = app.querySelector('.wm-tab.is-active');
+      if (activeTab && activeTab.getAttribute('data-tab') === 'logs') {
+        void loadLogs();
+      }
+      notifyResize();
+    });
 
     const els = {
       statusBadge: app.querySelector('#wm-status-badge'),
@@ -265,6 +284,7 @@
 
     let lastStatus = null;
     let lastLogs = null;
+    let settingsDirty = false;
 
     async function loadLogs() {
       try {
@@ -306,16 +326,30 @@
           els.alert.hidden = true;
         }
 
-        renderMetrics(els.metrics, cfg.metrics ? cfg.metrics(snap, lastStatus) : []);
+        renderMetrics(
+          els.metrics,
+          cfg.metrics ? cfg.metrics(snap, lastStatus) : [],
+          snap,
+          lastStatus
+        );
         els.overview.innerHTML = cfg.renderOverview ? cfg.renderOverview(snap, lastStatus) : '';
 
-        if (cfg.applySettings && lastStatus.settings && els.form) {
+        if (cfg.applySettings && lastStatus.settings && els.form && !settingsDirty) {
           cfg.applySettings(lastStatus.settings, els.form);
         }
       } catch (err) {
         els.alert.hidden = false;
         els.alert.className = 'wm-alert wm-alert--error';
         els.alert.textContent = err instanceof Error ? err.message : String(err);
+        if (cfg.metrics && els.metrics) {
+          const snap = lastStatus && lastStatus.snapshot;
+          renderMetrics(
+            els.metrics,
+            cfg.metrics(snap, lastStatus),
+            snap,
+            lastStatus
+          );
+        }
       }
 
       await loadLogs();
@@ -323,6 +357,12 @@
     }
 
     if (els.form && cfg.collectSettings) {
+      els.form.addEventListener('input', function () {
+        settingsDirty = true;
+      });
+      els.form.addEventListener('change', function () {
+        settingsDirty = true;
+      });
       els.form.addEventListener('submit', async function (e) {
         e.preventDefault();
         els.saveBtn.disabled = true;
@@ -333,6 +373,7 @@
             body: JSON.stringify({ settings }),
           });
           els.saveBtn.textContent = t({ ru: 'Сохранено', en: 'Saved' });
+          settingsDirty = false;
           setTimeout(function () {
             els.saveBtn.textContent = t({ ru: 'Сохранить', en: 'Save' });
           }, 1600);

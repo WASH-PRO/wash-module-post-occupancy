@@ -31,8 +31,8 @@
       applySettings(settings, form) {
         form.poll_interval.value = settings.poll_interval ?? 60;
       },
-      metrics(snap) {
-        if (!snap) return [];
+      metrics(snap, status) {
+        if (!snap || !snap.recordedAt) return [];
         return [
           { label: WashModule.t({ ru: 'Всего постов', en: 'Total posts' }), value: snap.total ?? 0, accent: true },
           { label: WashModule.t({ ru: 'Занято', en: 'Busy' }), value: snap.busy ?? 0, tone: 'accent' },
@@ -40,9 +40,13 @@
           { label: WashModule.t({ ru: 'Офлайн', en: 'Offline' }), value: snap.offline ?? 0 },
         ];
       },
-      renderOverview(snap) {
-        if (!snap) {
-          return `<div class="wm-empty">${WashModule.escapeHtml(WashModule.t({ ru: 'Нет снимка — запустите модуль.', en: 'No snapshot yet — start the module.' }))}</div>`;
+      renderOverview(snap, status) {
+        if (!snap || !snap.recordedAt) {
+          const running = status && (status.activeRunStatus === 'running' || (status.state && status.state.status === 'running'));
+          const hint = running
+            ? WashModule.t({ ru: 'Ожидание первого цикла опроса…', en: 'Waiting for the first poll cycle…' })
+            : WashModule.t({ ru: 'Нет снимка — запустите модуль.', en: 'No snapshot yet — start the module.' });
+          return `<div class="wm-empty">${WashModule.escapeHtml(hint)}</div>`;
         }
         const posts = Array.isArray(snap.posts) ? snap.posts : [];
         const busyPosts = posts.filter((p) => p.busy).slice(0, 8);
