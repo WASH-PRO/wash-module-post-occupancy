@@ -1,15 +1,17 @@
+**Language:** **English** · [Русский](README.ru.md)
+
 # wash-module-post-occupancy
 
-Модуль WASH PRO CRM: мониторинг занятости постов через `GET /api/crm/post-states`.
+WASH PRO CRM module: post occupancy monitoring via `GET /api/crm/post-states`.
 
-## Установка
+## Install
 
-Dashboard → Автоматизация → Модули → Установить.
+Dashboard → Automation → Modules → Install.
 
-## Настройки
+## Settings
 
-- `poll_interval` — интервал опроса API (секунды)
+- `poll_interval` — API poll interval (seconds)
 
-## Данные
+## Data
 
-Снимки сохраняются в `data/last_snapshot.json` внутри каталога модуля.
+Snapshots are saved to `data/last_snapshot.json` inside the module directory.

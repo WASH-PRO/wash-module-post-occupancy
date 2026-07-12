@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Справка — Монитор занятости постов</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Help — Post Occupancy Monitor</title>
   <style>
     body { font-family: system-ui, sans-serif; line-height: 1.55; color: #1e293b; margin: 0; padding: 1.25rem; max-width: 42rem; }
     h1 { font-size: 1.15rem; margin: 0 0 0.75rem; }
@@ -13,18 +13,18 @@
   </style>
 </head>
 <body>
-  <h1>Монитор занятости постов</h1>
-  <p>Модуль периодически опрашивает <code>GET /api/crm/post-states</code> и сохраняет снимок занятости в <code>data/last_snapshot.json</code>.</p>
-  <h2>Логика «занят»</h2>
+  <h1>Post Occupancy Monitor</h1>
+  <p>The module periodically polls <code>GET /api/crm/post-states</code> and saves an occupancy snapshot to <code>data/last_snapshot.json</code>.</p>
+  <h2>“Busy” logic</h2>
   <ul>
-    <li>Пост <strong>свободен</strong>, если онлайн и режим <code>program_9</code> (внесение оплаты).</li>
-    <li>Иначе при активном подключении — <strong>занят</strong>.</li>
+    <li>Post is <strong>free</strong> when online and mode is <code>program_9</code> (payment entry).</li>
+    <li>Otherwise, when connected — <strong>busy</strong>.</li>
   </ul>
-  <h2>Настройки</h2>
+  <h2>Settings</h2>
   <ul>
-    <li><code>poll_interval</code> — интервал опроса API (секунды, 15–3600).</li>
+    <li><code>poll_interval</code> — API poll interval (seconds, 15–3600).</li>
   </ul>
-  <h2>Запуск</h2>
-  <p>Требуется PyOrchestrator. После установки нажмите <strong>Запустить</strong> на карточке модуля.</p>
+  <h2>Start</h2>
+  <p>Requires PyOrchestrator. After install, click <strong>Start</strong> on the module card.</p>
 </body>
 </html>
