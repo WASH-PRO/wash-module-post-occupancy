@@ -4,69 +4,60 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Post Occupancy Monitor</title>
-  <style>
-    :root { font-family: system-ui, sans-serif; color: #1e293b; background: #f8fafc; }
-    body { margin: 0; padding: 1rem 1.25rem; }
-    h1 { font-size: 1.1rem; margin: 0 0 0.75rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; }
-    .card b { display: block; font-size: 1.4rem; }
-    label { display: block; margin-bottom: 0.75rem; font-size: 0.875rem; }
-    input { width: 100%; max-width: 12rem; padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; }
-    button { padding: 0.45rem 0.9rem; border-radius: 0.5rem; border: 0; background: #2563eb; color: #fff; cursor: pointer; }
-    pre { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; overflow: auto; font-size: 0.75rem; }
-    .muted { color: #64748b; font-size: 0.8rem; }
-  </style>
+  <link rel="stylesheet" href="wash-module-ui.css" />
 </head>
-<body>
-  <h1 id="title">Монитор занятости постов</h1>
-  <p class="muted" id="updated">—</p>
-  <div class="grid" id="stats"></div>
-  <form id="settings-form">
-    <label>
-      <span id="poll-label">Интервал опроса (сек)</span>
-      <input type="number" name="poll_interval" min="15" max="3600" />
-    </label>
-    <button type="submit" id="save-btn">Сохранить</button>
-  </form>
-  <h2 style="font-size:0.95rem;margin:1rem 0 0.5rem">Последний снимок</h2>
-  <pre id="snapshot">Загрузка…</pre>
+<body class="wm-body">
+  <div id="wm-app"></div>
   <script src="wash-module-sdk.js"></script>
   <script>
-    const MODULE_ID = 'post-occupancy-monitor';
-
-    async function refresh() {
-      const status = await WashModule.api(`/installed/${MODULE_ID}/status`);
-      const snap = status.snapshot;
-      const stats = document.getElementById('stats');
-      if (snap) {
-        document.getElementById('updated').textContent = snap.recordedAt || '—';
-        stats.innerHTML = ['total','busy','free','offline'].map((k) =>
-          `<div class="card"><span>${k}</span><b>${snap[k] ?? 0}</b></div>`
-        ).join('');
-        document.getElementById('snapshot').textContent = JSON.stringify(snap, null, 2);
-      } else {
-        stats.innerHTML = '<div class="card muted">Нет данных — запустите модуль</div>';
-        document.getElementById('snapshot').textContent = '—';
-      }
-      if (status.settings) {
-        document.querySelector('[name=poll_interval]').value = status.settings.poll_interval ?? 60;
-      }
-    }
-
-    document.getElementById('settings-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const poll_interval = Number(new FormData(e.target).get('poll_interval'));
-      await WashModule.api(`/installed/${MODULE_ID}/settings`, {
-        method: 'PUT',
-        body: JSON.stringify({ settings: { poll_interval } }),
-      });
-      document.getElementById('save-btn').textContent = 'Сохранено';
-      setTimeout(() => { document.getElementById('save-btn').textContent = 'Сохранить'; }, 1500);
+    WashModule.createPage({
+      moduleId: 'post-occupancy-monitor',
+      accent: '#0ea5e9',
+      refreshInterval: 10000,
+      title: { ru: 'Монитор занятости постов', en: 'Post occupancy monitor' },
+      subtitle: {
+        ru: 'Опрашивает состояния постов CRM и показывает занятость в реальном времени.',
+        en: 'Polls CRM post states and shows live occupancy.',
+      },
+      settingsHtml: `
+        <div class="wm-field">
+          <label class="wm-field-label">${WashModule.t({ ru: 'Интервал опроса (сек)', en: 'Poll interval (sec)' })}</label>
+          <input class="wm-input" type="number" name="poll_interval" min="15" max="3600" />
+          <span class="wm-field-hint">${WashModule.t({ ru: 'Как часто обновлять снимок состояния постов.', en: 'How often to refresh the post state snapshot.' })}</span>
+        </div>`,
+      collectSettings(form) {
+        return { poll_interval: Number(form.poll_interval.value) };
+      },
+      applySettings(settings, form) {
+        form.poll_interval.value = settings.poll_interval ?? 60;
+      },
+      metrics(snap) {
+        if (!snap) return [];
+        return [
+          { label: WashModule.t({ ru: 'Всего постов', en: 'Total posts' }), value: snap.total ?? 0, accent: true },
+          { label: WashModule.t({ ru: 'Занято', en: 'Busy' }), value: snap.busy ?? 0, tone: 'accent' },
+          { label: WashModule.t({ ru: 'Свободно', en: 'Free' }), value: snap.free ?? 0 },
+          { label: WashModule.t({ ru: 'Офлайн', en: 'Offline' }), value: snap.offline ?? 0 },
+        ];
+      },
+      renderOverview(snap) {
+        if (!snap) {
+          return `<div class="wm-empty">${WashModule.escapeHtml(WashModule.t({ ru: 'Нет снимка — запустите модуль.', en: 'No snapshot yet — start the module.' }))}</div>`;
+        }
+        const posts = Array.isArray(snap.posts) ? snap.posts : [];
+        const busyPosts = posts.filter((p) => p.busy).slice(0, 8);
+        const list = busyPosts.length
+          ? `<ul class="wm-list">${busyPosts.map((p) =>
+              `<li><span class="wm-kv"><span>${WashModule.escapeHtml(String(p.postId || '—'))}</span><span class="wm-tag">${WashModule.escapeHtml(String(p.mode || 'busy'))}</span></span></li>`
+            ).join('')}</ul>`
+          : `<p class="wm-field-hint">${WashModule.escapeHtml(WashModule.t({ ru: 'Сейчас нет занятых постов.', en: 'No busy posts right now.' }))}</p>`;
+        return `
+          <h2 class="wm-section-title">${WashModule.t({ ru: 'Занятые посты', en: 'Busy posts' })}</h2>
+          ${list}
+          <h2 class="wm-section-title" style="margin-top:1rem">${WashModule.t({ ru: 'Сырые данные', en: 'Raw snapshot' })}</h2>
+          <pre class="wm-code">${WashModule.escapeHtml(JSON.stringify(snap, null, 2))}</pre>`;
+      },
     });
-
-    refresh();
-    setInterval(refresh, 10000);
   </script>
 </body>
 </html>
