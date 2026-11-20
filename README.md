@@ -15,3 +15,7 @@ Dashboard → Automation → Modules → Install.
 ## Data
 
 Snapshots are saved to `data/last_snapshot.json` inside the module directory.
+
+---
+
+**Website:** [wash-pro.tech](https://wash-pro.tech) · **GitHub:** [WASH-PRO](https://github.com/WASH-PRO)
