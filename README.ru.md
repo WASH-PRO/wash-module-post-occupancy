@@ -15,3 +15,7 @@ Dashboard → Автоматизация → Модули → Установит
 ## Данные
 
 Снимки сохраняются в `data/last_snapshot.json` внутри каталога модуля.
+
+---
+
+**Сайт:** [wash-pro.tech](https://wash-pro.tech) · **GitHub:** [WASH-PRO](https://github.com/WASH-PRO)
